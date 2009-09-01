@@ -1,5 +1,5 @@
 /*================================================================================
-Copyright (c) 2008 VMware, Inc. All Rights Reserved.
+Copyright (c) 2009 VMware, Inc. All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -27,45 +27,37 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 ================================================================================*/
 
-package com.vmware.vim25.mo;
+package com.vmware.vim25.ws;
 
-import java.rmi.RemoteException;
+import java.net.URL;
 
-import com.vmware.vim25.HostAutoStartManagerConfig;
-import com.vmware.vim25.ManagedObjectReference;
-import com.vmware.vim25.RuntimeFault;
+public abstract class AbstractServerConnection {
+   private URL url = null;
+   private Stub stub = null;
 
-/**
- * The managed object class corresponding to the one defined in VI SDK API reference.
- * @author Steve JIN (sjin@vmware.com)
- */
+   public AbstractServerConnection(Stub stub) {
+      this.url = stub.getWsc().getBaseUrl();
+      this.stub = stub;
+   }
 
-public class HostAutoStartManager extends VimManagedObject
-{
+   /**
+    * @return the current session string in format like:
+    * vmware_soap_session="B3240D15-34DF-4BB8-B902-A844FDF42E85"
+    */
+   public String getSessionStr() {
+      WSClient wsc = stub.getWsc();
+      return wsc.getCookie();
+   }
 
-	public HostAutoStartManager(ServerConnection serverConnection, ManagedObjectReference mor)
-	{
-		super(serverConnection, mor);
-	}
+   public Stub getStub() {
+      return stub;
+   }
 
-	public HostAutoStartManagerConfig getConfig()
-	{
-		return (HostAutoStartManagerConfig) getCurrentProperty("config");
-	}
+   protected void setStub(Stub newStub) {
+      stub = newStub;
+   }
 
-	public void autoStartPowerOff() throws RuntimeFault, RemoteException
-	{
-		getVimService().autoStartPowerOff(getMOR());
-	}
-
-	public void autoStartPowerOn() throws RuntimeFault, RemoteException
-	{
-		getVimService().autoStartPowerOn(getMOR());
-	}
-
-	public void reconfigureAutostart(HostAutoStartManagerConfig spec) throws RuntimeFault, RemoteException
-	{
-		getVimService().reconfigureAutostart(getMOR(), spec);
-	}
-
+   public URL getUrl() {
+      return url;
+   }
 }

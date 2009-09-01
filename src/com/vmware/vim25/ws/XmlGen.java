@@ -51,7 +51,8 @@ import org.dom4j.QName;
 
 public final class XmlGen
 {
-   private String PACKAGE_NAME = "com.vmware.vim25";
+   private String PACKAGE_NAME = VIM_PACKAGE_NAME;
+   private static final String VIM_PACKAGE_NAME = "com.vmware.vim25";
    private static Namespace XSI = new Namespace("xsi", "http://www.w3.org/2001/XMLSchema-instance");
    private static QName XSI_TYPE = new QName("type", XSI);
    private static String[] BASIC_TYPES = new String[] {"String", "int", "short", "long", "byte", "boolean", "Boolean", "Calendar", "Integer", "Short", "Long", "Byte"};
@@ -100,7 +101,7 @@ public final class XmlGen
          else
          {
             Object mos = Array.newInstance(
-                  Class.forName(PACKAGE_NAME + "." + type.substring(0,type.indexOf('['))),
+                  Class.forName(VIM_PACKAGE_NAME + "." + type.substring(0,type.indexOf('['))),
                   subNodes.size());
             for(int i=0; i<subNodes.size(); i++)
             {
@@ -175,7 +176,30 @@ public final class XmlGen
             Class clazz = null;
             if(! type.endsWith("[]"))
             {
-               clazz = Class.forName(PACKAGE_NAME + "." + type);
+               /*
+                * Check to see if this name is fully qualified. If it is not
+                * attempt to locate the type in the VIM package. Otherwise,
+                * attempt to locate the type in the set package name.
+                */
+               try {
+                  clazz = Class.forName(type);
+               } catch (ClassNotFoundException e) {
+                  /*
+                   * Check to see if this class exists in the VIM package.
+                   */
+                  try {
+                     clazz = Class.forName(VIM_PACKAGE_NAME + "." + type);
+                  } catch (ClassNotFoundException cnfe) {
+                     /*
+                      * Object was not in the VIM package. Use configured
+                      * package instead.
+                      */
+                     if (PACKAGE_NAME.equals(VIM_PACKAGE_NAME)) {
+                        throw cnfe;
+                     }
+                     clazz = Class.forName(PACKAGE_NAME + "." + type);
+                  }
+               }
             }
             else
             {
@@ -230,7 +254,7 @@ public final class XmlGen
             fRealType = getClass(xsiType);
          }
 
-         if(fRealType == Class.forName(PACKAGE_NAME + ".ManagedObjectReference"))
+         if(fRealType == getClass("ManagedObjectReference"))
          { // MOR
             if(isFieldArray)
             {
@@ -269,7 +293,8 @@ public final class XmlGen
                i = i + sizeOfFieldArray -1;
             }
          }
-         else if( fRealType.getPackage() == Package.getPackage(PACKAGE_NAME))
+         else if (fRealType.getPackage() == Package.getPackage(PACKAGE_NAME)
+               || fRealType.getPackage() == Package.getPackage(VIM_PACKAGE_NAME))
          { //VIM type
             if(isFieldArray)
             {
@@ -358,7 +383,7 @@ public final class XmlGen
    private Object createMOR(String type, String value)
    {
       try {
-         Class clazz = Class.forName(PACKAGE_NAME + ".ManagedObjectReference");
+         Class clazz = Class.forName(VIM_PACKAGE_NAME + ".ManagedObjectReference");
          Object mor = clazz.newInstance();
          clazz.getMethod("set_value", Class.forName("java.lang.String")).invoke(mor, value);
          clazz.getMethod("setType", Class.forName("java.lang.String")).invoke(mor, type);
@@ -615,7 +640,7 @@ public final class XmlGen
          }
 
          // from now on, no array type
-         else if(clazz == Class.forName(PACKAGE_NAME + ".ManagedObjectReference"))
+         else if(clazz == Class.forName(VIM_PACKAGE_NAME + ".ManagedObjectReference"))
          { //MOR]
             try {
                sb.append("<" + tagName + " type=\""

@@ -43,7 +43,7 @@ import com.vmware.vim25.ws.WSClient;
  * @author Steve JIN (sjin@vmware.com)
  */
 
-public class ServiceInstance extends ManagedObject
+public class ServiceInstance extends VimManagedObject
 {
    private ServiceContent serviceContent = null;
    final static ManagedObjectReference SERVICE_INSTANCE_MOR;

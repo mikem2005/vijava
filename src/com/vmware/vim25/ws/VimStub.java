@@ -35,24 +35,17 @@ import java.util.Calendar;
 /**
 @author Steve Jin (sjin@vmware.com)
 */
-
-public class VimStub
+public class VimStub extends Stub
 {
-  private WSClient wsc = null;
 
   public VimStub(String url, boolean ignoreCert) throws java.net.MalformedURLException
   {
-    this.wsc = new WSClient(url, ignoreCert, this.getClass().getPackage().getName());
+    super(url, ignoreCert);
   }
 
   public VimStub(WSClient wsc)
   {
-    this.wsc = wsc;
-  }
-
-  public WSClient getWsc()
-  {
-    return wsc;
+    super(wsc);
   }
 
   public void destroyPropertyFilter(ManagedObjectReference _this) throws java.rmi.RemoteException, RuntimeFault

@@ -1,5 +1,5 @@
 /*================================================================================
-Copyright (c) 2008 VMware, Inc. All Rights Reserved.
+Copyright (c) 2009 VMware, Inc. All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -27,45 +27,51 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 ================================================================================*/
 
-package com.vmware.vim25.mo;
-
-import java.rmi.RemoteException;
-
-import com.vmware.vim25.HostAutoStartManagerConfig;
-import com.vmware.vim25.ManagedObjectReference;
-import com.vmware.vim25.RuntimeFault;
+package com.vmware.vim25.ws;
 
 /**
- * The managed object class corresponding to the one defined in VI SDK API reference.
- * @author Steve JIN (sjin@vmware.com)
+ * Abstract class for a Stub compatible with the VIM web service client engine.
+ *
+ * @author Dan Parrella
  */
+public abstract class Stub {
 
-public class HostAutoStartManager extends VimManagedObject
-{
+   protected WSClient wsc = null;
 
-	public HostAutoStartManager(ServerConnection serverConnection, ManagedObjectReference mor)
-	{
-		super(serverConnection, mor);
-	}
+   /**
+    * Constructor.
+    *
+    * @param url
+    *           Endpoint URL of the web service
+    * @param ignoreCert
+    *           Whether or not all certificates should be trusted
+    * @throws java.net.MalformedURLException
+    */
+   public Stub(String url, boolean ignoreCert) throws java.net.MalformedURLException
+   {
+      this.wsc =
+            new WSClient(url, ignoreCert, this.getClass()
+                                              .getPackage()
+                                              .getName());
+   }
 
-	public HostAutoStartManagerConfig getConfig()
-	{
-		return (HostAutoStartManagerConfig) getCurrentProperty("config");
-	}
+   /**
+    * Constructor for a stub with a pre-configured web service client.
+    *
+    * @param wsc
+    */
+   public Stub(WSClient wsc)
+   {
+     this.wsc = wsc;
+   }
 
-	public void autoStartPowerOff() throws RuntimeFault, RemoteException
-	{
-		getVimService().autoStartPowerOff(getMOR());
-	}
-
-	public void autoStartPowerOn() throws RuntimeFault, RemoteException
-	{
-		getVimService().autoStartPowerOn(getMOR());
-	}
-
-	public void reconfigureAutostart(HostAutoStartManagerConfig spec) throws RuntimeFault, RemoteException
-	{
-		getVimService().reconfigureAutostart(getMOR(), spec);
-	}
-
+   /**
+    * Get the web service client associated with this stub.
+    *
+    * @return
+    */
+   public WSClient getWsc()
+   {
+     return wsc;
+   }
 }

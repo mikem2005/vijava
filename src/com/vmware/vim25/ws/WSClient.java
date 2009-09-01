@@ -159,7 +159,8 @@ public final class WSClient
       InputStream is = post(soapMsg);
       SAXReader reader = new SAXReader();
       Document doc = reader.read(is);
-       root = doc.getRootElement();
+      is.close();
+      root = doc.getRootElement();
     } catch (Exception e)
     {
       throw new RemoteException("VI SDK invoke exception:" + e);
