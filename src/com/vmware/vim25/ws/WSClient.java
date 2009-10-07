@@ -35,12 +35,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
@@ -74,6 +71,7 @@ public final class WSClient
   private URL baseUrl = null;
   private String cookie = null;
   private String vimNameSpace = null;
+  private final boolean ignoreCert;
   
   public WSClient(String serverUrl) throws MalformedURLException 
   {
@@ -87,23 +85,7 @@ public final class WSClient
       serverUrl = serverUrl.substring(0, serverUrl.length()-1);
     } 
     this.baseUrl = new URL(serverUrl);
-    if(ignoreCert)
-    {
-      try
-      {
-        trustAllHttpsCertificates();
-        HttpsURLConnection.setDefaultHostnameVerifier
-        (
-          new HostnameVerifier() 
-          {
-            public boolean verify(String urlHostName, SSLSession session)
-            {
-              return true;
-            }
-          }
-        );
-      } catch (Exception e)  {}
-    }
+    this.ignoreCert = ignoreCert;
   }
   
   public Object invoke(ManagedObjectReference mor, String methodName, Argument[] paras, String returnType) throws IOException
@@ -221,7 +203,27 @@ public final class WSClient
   
   public InputStream post(String soapMsg) throws IOException
   {
-    HttpURLConnection postCon = (HttpURLConnection) baseUrl.openConnection();
+    HttpsURLConnection postCon = (HttpsURLConnection) baseUrl.openConnection();
+    if (ignoreCert) {
+      try {
+        TrustManager[] trustAllCerts = new TrustManager[1]; 
+        trustAllCerts[0] = new TrustAllManager(); 
+        SSLContext sc = SSLContext.getInstance("SSL"); 
+        sc.init(null, trustAllCerts, null); 
+        //assign specific SocketFactory to instance
+        postCon.setSSLSocketFactory(sc.getSocketFactory());
+        postCon.setHostnameVerifier(new HostnameVerifier() 
+        {
+          public boolean verify(String urlHostName, SSLSession session)
+          {
+            return true;
+          }
+        });
+      }
+      catch(Exception e) { 
+        throw new RuntimeException(e); 
+      }
+    }
     try {
         postCon.setRequestMethod("POST");
     } catch (ProtocolException e) 
@@ -301,17 +303,6 @@ public final class WSClient
     }
     in.close();
     return sb;
-  }
-  
-  private static void trustAllHttpsCertificates() 
-    throws NoSuchAlgorithmException, KeyManagementException
-  {
-    TrustManager[] trustAllCerts = new TrustManager[1]; 
-    trustAllCerts[0] = new TrustAllManager(); 
-    SSLContext sc = SSLContext.getInstance("SSL"); 
-    sc.init(null, trustAllCerts, null); 
-    HttpsURLConnection.setDefaultSSLSocketFactory(
-        sc.getSocketFactory());
   }
 
   private static class TrustAllManager implements X509TrustManager 
