@@ -120,6 +120,37 @@ public class ServiceInstance extends ManagedObject
 	{
 		super(sc, SERVICE_INSTANCE_MOR);
 	}
+	
+    /**
+     * Copyright 2009 NetApp, contribution by Eric Forgette
+     * 
+     * This constructor builds a new ServiceInstance based on a ServiceInstance.
+     * The new ServiceInstance is effectively a clone of the first.  This clone will
+     * NOT become invalid when the first is logged out.
+     * 
+     * @author Eric Forgette (forgette@netapp.com)
+     * @throws RemoteException 
+     * @throws RuntimeFault 
+     * @throws InvalidLogin 
+     * @throws MalformedURLException 
+     * 
+     */
+	public ServiceInstance(ServiceInstance si, boolean ignoreCert) throws InvalidLogin, RuntimeFault, RemoteException, MalformedURLException
+	{
+	    if (si == null) throw new NullPointerException("The ServiceInstance to be cloned was null.");
+	    setMOR(SERVICE_INSTANCE_MOR);
+	    
+	    VimPortType vimService = new VimPortType(si.getServerConnection().getUrl().toString(), ignoreCert);
+	    vimService.getWsc().setVimNameSpace(VIM25_NAMESPACE);
+	    
+	    serviceContent = vimService.retrieveServiceContent(SERVICE_INSTANCE_MOR);
+	    setServerConnection(new ServerConnection(si.getServerConnection().getUrl(), vimService, this));
+	    
+	    String ticket = si.getSessionManager().acquireCloneTicket();
+	    UserSession userSession = getSessionManager().cloneSession(ticket);
+	    
+	    getServerConnection().setUserSession(userSession);
+	}
 
 	public Calendar getServerClock()
 	{
@@ -129,6 +160,11 @@ public class ServiceInstance extends ManagedObject
 	public Capability getCapability()
 	{
 		return (Capability) getCurrentProperty("capability");
+	}
+	
+	public ClusterProfileManager getClusterProfileManager()
+	{
+		return (ClusterProfileManager) createMO(getServiceContent().getClusterProfileManager());
 	}
 	
 	public Calendar currentTime() throws RuntimeFault, RemoteException 
@@ -223,6 +259,11 @@ public class ServiceInstance extends ManagedObject
 		return (DiagnosticManager) createMO(getServiceContent().getDiagnosticManager());
 	}
 	
+	public DistributedVirtualSwitchManager getDistributedVirtualSwitchManager()
+	{
+		return (DistributedVirtualSwitchManager) createMO(getServiceContent().getDvSwitchManager());
+	}
+	
 	public ExtensionManager getExtensionManager()
 	{
 		return (ExtensionManager) createMO(getServiceContent().getExtensionManager());
@@ -242,12 +283,22 @@ public class ServiceInstance extends ManagedObject
 	{
 		return (LicenseManager) createMO(getServiceContent().getLicenseManager());
 	}
+	
+	public LocalizationManager getLocalizationManager()
+	{
+		return (LocalizationManager) createMO(getServiceContent().getLocalizationManager());
+	}
 
 	public PerformanceManager getPerformanceManager()
 	{
 		return (PerformanceManager) createMO(getServiceContent().getPerfManager());
 	}
 
+	public ProfileComplianceManager getProfileComplianceManager()
+	{
+		return (ProfileComplianceManager) createMO(getServiceContent().getComplianceManager());
+	}
+	
 	public PropertyCollector getPropertyCollector()
 	{
 		return (PropertyCollector) createMO(getServiceContent().getPropertyCollector());
@@ -268,6 +319,31 @@ public class ServiceInstance extends ManagedObject
 		return (SessionManager) createMO(getServiceContent().getSessionManager());
 	}
 
+	public HostSnmpSystem getHostSnmpSystem()
+	{
+		return (HostSnmpSystem) createMO(getServiceContent().getSnmpSystem());
+	}
+
+	public HostProfileManager getHostProfileManager()
+	{
+		return (HostProfileManager) createMO(getServiceContent().getHostProfileManager());
+	}
+	
+	public IpPoolManager getIpPoolManager()
+	{
+		return (IpPoolManager) createMO(getServiceContent().getIpPoolManager());
+	}
+	
+	public VirtualMachineProvisioningChecker getVirtualMachineProvisioningChecker()
+	{
+		return (VirtualMachineProvisioningChecker) createMO(getServiceContent().getVmProvisioningChecker());
+	}
+
+	public VirtualMachineCompatibilityChecker getVirtualMachineCompatibilityChecker()
+	{
+		return (VirtualMachineCompatibilityChecker) createMO(getServiceContent().getVmCompatibilityChecker());
+	}
+	
 	public TaskManager getTaskManager()
 	{
 		return (TaskManager) createMO(getServiceContent().getTaskManager());
@@ -291,6 +367,11 @@ public class ServiceInstance extends ManagedObject
 	public OptionManager getOptionManager()
 	{
 		return (OptionManager) createMO(getServiceContent().getSetting());
+	}
+	
+	public OvfManager getOvfManager()
+	{
+		return (OvfManager) createMO(getServiceContent().getOvfManager());
 	}
 	
 	private ManagedObject createMO(ManagedObjectReference mor)
