@@ -22,9 +22,9 @@
 	<target name="dist" depends="compile" >
 		
 		<mkdir dir="${dist}"/>
-		<copy file="${basedir}/License.txt" todir="${dist}" />
-		<copy file="${basedir}/README.txt" todir="${dist}" />
-		<copy file="${basedir}/rel-note.txt" todir="${dist}" />
+		<copy file="${basedir}/License.txt" todir="${build}" />
+		<copy file="${basedir}/README.txt" todir="${build}" />
+		<copy file="${basedir}/rel-note.txt" todir="${build}" />
 
 		<!-- Put everything in ${build} into the the jar file -->
 		<jar jarfile="${dist}/vijava-2.1.jar" basedir="${build}"/>
