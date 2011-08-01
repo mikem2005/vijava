@@ -12,7 +12,7 @@ public class ServiceInstanceBuilder
 {
 	private URL url;
 	
-	// either username/password or sessionStr may be simultaneously
+	// either username/password or sessionStr may be set, but not both simultaneously
 	private String username;
 	private String password;
 	
