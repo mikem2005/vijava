@@ -72,6 +72,13 @@ public class ServiceInstance extends ManagedObject
 	public ServiceInstance(URL url, String username, String password, boolean ignoreCert, String namespace)
 		throws RemoteException, MalformedURLException 
 	{
+		this(url, username, password, ignoreCert, namespace, null, null);
+	}
+	
+	public ServiceInstance(URL url, String username, String password, boolean ignoreCert, String namespace, 
+	                       Integer connectTimeoutMillis, Integer readTimeoutMillis)
+	        throws RemoteException, MalformedURLException 
+	{
 		if(url == null || username==null)
 		{
 			throw new NullPointerException("None of url, username can be null.");
@@ -81,6 +88,12 @@ public class ServiceInstance extends ManagedObject
 
 		VimPortType vimService = new VimPortType(url.toString(), ignoreCert);
 		vimService.getWsc().setVimNameSpace(namespace);
+		if (connectTimeoutMillis != null) {
+			vimService.getWsc().setConnectTimeout(connectTimeoutMillis);
+		}
+		if (readTimeoutMillis != null) {
+			vimService.getWsc().setReadTimeout(readTimeoutMillis);
+		}
 		
 		serviceContent = vimService.retrieveServiceContent(SERVICE_INSTANCE_MOR);
 		vimService.getWsc().setSoapActionOnApiVersion(serviceContent.getAbout().getApiVersion());
@@ -103,9 +116,16 @@ public class ServiceInstance extends ManagedObject
 	{
 		this(url, sessionStr, ignoreCert, VIM25_NAMESPACE);
 	}
+	
+	public ServiceInstance(URL url, String sessionStr, boolean ignoreCert, String namespace)
+	throws RemoteException, MalformedURLException
+	{
+		this(url, sessionStr, ignoreCert, namespace, null, null);
+	}
 		
 	// sessionStr format: "vmware_soap_session=\"B3240D15-34DF-4BB8-B902-A844FDF42E85\""
-	public ServiceInstance(URL url, String sessionStr, boolean ignoreCert, String namespace)
+	public ServiceInstance(URL url, String sessionStr, boolean ignoreCert, String namespace,
+	                       Integer connectTimeoutMillis, Integer readTimeoutMillis)
 		throws RemoteException, MalformedURLException
 	{
 		if(url == null || sessionStr ==null)
@@ -119,9 +139,15 @@ public class ServiceInstance extends ManagedObject
 		WSClient wsc = vimService.getWsc();
 		wsc.setCookie(sessionStr);
 		wsc.setVimNameSpace(namespace);
+		if (connectTimeoutMillis != null) {
+			vimService.getWsc().setConnectTimeout(connectTimeoutMillis);
+		}
+		if (readTimeoutMillis != null) {
+			vimService.getWsc().setReadTimeout(readTimeoutMillis);
+		}
 		
 		serviceContent = vimService.retrieveServiceContent(SERVICE_INSTANCE_MOR);
-    wsc.setSoapActionOnApiVersion(serviceContent.getAbout().getApiVersion());
+		wsc.setSoapActionOnApiVersion(serviceContent.getAbout().getApiVersion());
 		setServerConnection(new ServerConnection(url, vimService, this));
 		UserSession userSession = (UserSession) getSessionManager().getCurrentProperty("currentSession");
 		getServerConnection().setUserSession(userSession);
